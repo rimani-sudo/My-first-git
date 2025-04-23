@@ -1,4 +1,4 @@
-<!-- Banner -->
+<!-- <img src="https://raw.githubusercontent.com/rimani-sudo/REPO/main/banner.png" />Banner -->
 <p align="center">
   <img src="https://your-image-link-here.png" alt="Bengali Automation Toolkit Banner" style="width:100%; border-radius: 15px;" />
 </p>
