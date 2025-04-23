@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Tic-Tac-Toe</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #1a202c;
+            font-family: 'Press Start 2P', monospace;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .container {
+            text-align: center;
+            width: 90%;
+            max-width: 800px;
+            padding: 1.25rem;
+            border-radius: 1rem;
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(12px);
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.75rem;
+            color: #f56565;
+            letter-spacing: 0.1em;
+            text-shadow: 0 0 8px rgba(244, 114, 182, 0.5);
+        }
+
+        @media (max-width: 400px){
+           h1{
+             font-size: 1.5rem
+           }
+        }
+
+        #gameboard {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-template-rows: repeat(3, 100px);
+            gap: 0.5rem;
+            margin: 1rem auto;
+            perspective: 800px;
+        }
+
+        @media (max-width: 400px){
+            #gameboard {
+               grid-template-columns: repeat(3, 80px);
+               grid-template-rows: repeat(3, 80px);
+            }
+        }
+
+        .cell {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5rem;
+            cursor: pointer;
+            border-radius: 0.75rem;
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            transition: transform 0.2s ease, background-color 0.3s ease, box-shadow 0.2s ease;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transform-style: preserve-3d;
+        }
+
+        .cell:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+            transform: scale(1.06);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .cell.x {
+            color: #81e6d9;
+        }
+
+        .cell.o {
+            color: #f067b6;
+        }
+
+        .cell.x::before {
+            content: '';
+            position: absolute;
+            width: 70%;
+            height: 8px;
+            background-color: #81e6d9;
+            border-radius: 4px;
+            transform: rotate(45deg);
+            opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .cell.x::after {
+            content: '';
+            position: absolute;
+            width: 70%;
+            height: 8px;
+            background-color: #81e6d9;
+            border-radius: 4px;
+            transform: rotate(-45deg);
+            opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .cell.x.show::before,
+        .cell.x.show::after{
+           opacity: 1;
+        }
+
+        .cell.o::before {
+            content: '';
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 8px solid #f067b6;
+            opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            transform: scale(0);
+        }
+
+        .cell.o.show::before {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .info {
+            margin-top: 1.5rem;
+            font-size: 1rem;
+            color: #cbd5e0;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            justify-content: center;
+        }
+
+        .reset-button, .mode-button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            font-family: 'Press Start 2P', monospace;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: background-color 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
+            font-size: 0.8rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .reset-button:hover, .mode-button:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: scale(1.04);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .reset-button.active {
+            background-color: rgba(255, 255, 255, 0.3);
+            transform: scale(1.08);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+        .mode-button.active {
+            background-color: rgba(255, 255, 255, 0.3);
+            transform: scale(1.08);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        #winning-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #ffffff;
+            padding: 2rem;
+            border-radius: 1rem;
+            font-size: 1.2rem;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+            z-index: 10;
+            text-align: center;
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
+             border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        #winning-message.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+
+        #winning-message p {
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+            letter-spacing: 0.1em;
+        }
+
+        @media (max-width: 400px){
+           #winning-message p{
+              font-size: 1.2rem
+           }
+           #winning-message{
+             padding: 1rem;
+           }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Tic-Tac-Toe</h1>
+        <div id="gameboard">
+            <div class="cell" data-cell-index="0"></div>
+            <div class="cell" data-cell-index="1"></div>
+            <div class="cell" data-cell-index="2"></div>
+            <div class="cell" data-cell-index="3"></div>
+            <div class="cell" data-cell-index="4"></div>
+            <div class="cell" data-cell-index="5"></div>
+            <div class="cell" data-cell-index="6"></div>
+            <div class="cell" data-cell-index="7"></div>
+            <div class="cell" data-cell-index="8"></div>
+        </div>
+        <div class="info">
+            <p>Current Player: <span id="current-player">X</span></p>
+        </div>
+        <div class="buttons">
+            <button class="reset-button" id="reset-button">Reset</button>
+             <button class="mode-button" id="mode-button">1 Player</button>
+        </div>
+        <div id="winning-message">
+            <p id="winnerText"></p>
+            <button class="reset-button" id="close-message">Close</button>
+        </div>
+    </div>
+
+    <script>
+        const gameboard = document.getElementById('gameboard');
+        const cells = document.querySelectorAll('.cell');
+        const currentPlayerDisplay = document.getElementById('current-player');
+        const resetButton = document.getElementById('reset-button');
+        const modeButton = document.getElementById('mode-button');
+        const winningMessage = document.getElementById('winning-message');
+        const winnerText = document.getElementById('winnerText');
+        const closeMessageButton = document.getElementById('close-message');
+
+        let board = ['', '', '', '', '', '', '', '', ''];
+        let currentPlayer = 'X';
+        let isGameActive = true;
+        let gameMode = '1 Player';
+        let aiPlayer = 'O';
+        let humanPlayer = 'X';
+
+        modeButton.addEventListener('click', toggleGameMode);
+        resetButton.addEventListener('click', resetGame);
+        closeMessageButton.addEventListener('click', () => {
+            winningMessage.classList.remove('show');
+        });
+
+        function toggleGameMode() {
+            gameMode = gameMode === '1 Player' ? '2 Players' : '1 Player';
+            modeButton.textContent = gameMode === '1 Player' ? '1 Player' : '2 Players';
+            resetGame();
+        }
+
+        function handleCellClick(event) {
+            if (!isGameActive) return;
+
+            const cell = event.target;
+            const cellIndex = parseInt(cell.dataset.cellIndex);
+
+            if (board[cellIndex] !== '') return;
+
+            board[cellIndex] = currentPlayer;
+            cell.textContent = currentPlayer;
+            cell.classList.add(currentPlayer);
+            cell.classList.add('show');
+
+            // Add this part for color change on click
+            if (currentPlayer === 'X') {
+                cell.style.backgroundColor = '#81e6d933'; /* হালকা টিল */
+            } else {
+                cell.style.backgroundColor = '#f067b633'; /* হালকা পিঙ্ক */
+            }
+
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            currentPlayerDisplay.textContent = currentPlayer;
+
+            let winningCells = checkWin();
+            if (winningCells) {
+                isGameActive = false;
+                highlightWinningCells(winningCells);
+                showWinningMessage(board[winningCells[0]]);
+                return;
+            }
+
+            if (isBoardFull()) {
+                isGameActive = false;
+                showWinningMessage('Draw');
+                return;
+            }
+
+            if (gameMode === '1 Player' && currentPlayer === aiPlayer) {
+                setTimeout(aiMove, 500);
+            }
+        }
+
+        function highlightWinningCells(cells) {
+            cells.forEach(index => {
+                const cellElement = document.querySelector(`[data-cell-index="${index}"]`);
+                cellElement.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
+            });
+        }
+
+        function showWinningMessage(winner) {
+            winnerText.textContent = winner === 'Draw' ? 'It\'s a Draw!' : `${winner} Wins!`;
+            winningMessage.classList.add('show');
+        }
+
+        function checkWin() {
+            const winPatterns = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8],
+                [0, 3, 6], [1, 4, 7], [2, 5, 8],
+                [0, 4, 8], [2, 4, 6]
+            ];
+
+            for (const pattern of winPatterns) {
+                const [a, b, c] = pattern;
+                if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+                    return pattern;
+                }
+            }
+            return null;
+        }
+
+        function isBoardFull() {
+            return board.every(cell => cell !== '');
+        }
+
+        function resetGame() {
+            board = ['', '', '', '', '', '', '', '', ''];
+            isGameActive = true;
+            currentPlayer = 'X';
+            currentPlayerDisplay.textContent = currentPlayer;
+            cells.forEach(cell => {
+                cell.textContent = '';
+                cell.classList.remove('x', 'o', 'show');
+                cell.style.backgroundColor = 'transparent';
+            });
+            winningMessage.classList.remove('show');
+             if (gameMode === '1 Player' && currentPlayer === aiPlayer) {
+                setTimeout(aiMove, 500);
+            }
+        }
+
+
+
+function aiMove() {
+    if (!isGameActive) return;
+
+    let bestMove = -1;
+    let bestScore = -Infinity;
+
+    for (let i = 0; i < board.length; i++) {
+        if (board[i] === '') {
+            board[i] = aiPlayer;
+            let score = minimax(board, 0, false);
+            board[i] = '';
+            if (score > bestScore) {
+                bestScore = score;
+                bestMove = i;
+            }
+        }
+    }
+
+    board[bestMove] = aiPlayer;
+    const cell = document.querySelector(`[data-cell-index="${bestMove}"]`);
+    cell.textContent = aiPlayer;
+    cell.classList.add(aiPlayer);
+    cell.classList.add('show');
+
+    // Add color for AI move
+    cell.style.backgroundColor = '#f067b633';
+
+    currentPlayer = humanPlayer;
+    currentPlayerDisplay.textContent = currentPlayer;
+
+    let winningCells = checkWin();
+    if (winningCells) {
+        isGameActive = false;
+        highlightWinningCells(winningCells);
+        showWinningMessage(board[winningCells[0]]);
+        return;
+    }
+
+    if (isBoardFull()) {
+        isGameActive = false;
+        showWinningMessage('Draw');
+        return;
+    }
+}
+
+let depthCounter = 0;
+function minimax(currentBoard, depth, isMaximizing) {
+    depthCounter++;
+    let scores = {
+        X: -1,
+        O: 1,
+        Draw: 0
+    };
+
+    let winningCells = checkWin();
+    if (winningCells) {
+        return scores[currentBoard[winningCells[0]]];
+    }
+    if (isBoardFull(currentBoard)) {
+        return scores['Draw'];
+    }
+
+    if (isMaximizing) {
+        let bestScore = -Infinity;
+        for (let i = 0; i < currentBoard.length; i++) {
+            if (currentBoard[i] === '') {
+                currentBoard[i] = aiPlayer;
+                let score = minimax(currentBoard, depth + 1, false);
+                currentBoard[i] = '';
+                bestScore = Math.max(score, bestScore);
+            }
+        }
+        return bestScore;
+    } else {
+        let bestScore = Infinity;
+        for (let i = 0; i < currentBoard.length; i++) {
+            if (currentBoard[i] === '') {
+                currentBoard[i] = humanPlayer;
+                let score = minimax(currentBoard, depth + 1, true);
+                currentBoard[i] = '';
+                bestScore = Math.min(score, bestScore);
+            }
+        }
+        return bestScore;
+    }
+}
+
+
+        cells.forEach(cell => {
+            cell.addEventListener('click', handleCellClick);
+        });
+
+        resetGame();
+    </script>
+</body>
+</html>
+
